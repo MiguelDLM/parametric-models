@@ -75,6 +75,13 @@ M3_NUT_DEPTH = 4.0              # Hex pocket depth
 SCREW_POS_X = 10.5              # Screw X position
 SCREW_POS_Y = 9.0               # Screw Y position
 
+# Planarization planes to guarantee flat FDM print-bed faces after splitting:
+# +/-6.0 mm matches the 12.0 mm front plate envelope and removes the extra
+# +/-2.0 mm introduced by the rear 16.0 mm cable collar height.
+BASE_PLANAR_Z = -6.0
+LID_PLANAR_Z = 6.0
+PLANAR_CUTTER_SIZE = 80.0
+
 
 # ==============================================================================
 # GEOMETRY GENERATOR HELPERS
@@ -303,7 +310,25 @@ def build_db9_hood(cleanup_existing: bool = True) -> tuple[bpy.types.Object, bpy
     # Base: cut away upper cavity half, retaining the full front plate
     apply_boolean_difference(base_obj, make_box("CutBaseTop", (50.0, 50.0, 25.0), (0.0, FRONT_WALL_THICKNESS + 25.0, 12.5)))
 
-    # 8. Assembly screw holes (M3 clearance, nut pockets and counterbores)
+    # 8. Planarize print-bed faces (local Z = -6.0 for Base, +6.0 for Lid)
+    apply_boolean_difference(
+        base_obj,
+        make_box(
+            "PlanarCutBaseBottom",
+            (PLANAR_CUTTER_SIZE, PLANAR_CUTTER_SIZE, PLANAR_CUTTER_SIZE),
+            (0.0, 0.0, BASE_PLANAR_Z - PLANAR_CUTTER_SIZE / 2.0)
+        )
+    )
+    apply_boolean_difference(
+        tapa_obj,
+        make_box(
+            "PlanarCutLidTop",
+            (PLANAR_CUTTER_SIZE, PLANAR_CUTTER_SIZE, PLANAR_CUTTER_SIZE),
+            (0.0, 0.0, LID_PLANAR_Z + PLANAR_CUTTER_SIZE / 2.0)
+        )
+    )
+
+    # 9. Assembly screw holes (M3 clearance, nut pockets and counterbores)
     for obj in [base_obj, tapa_obj]:
         apply_boolean_difference(obj, make_cylinder("ScrewL", M3_SCREW_DIA / 2.0, 25.0, (-SCREW_POS_X, SCREW_POS_Y, 0.0)))
         apply_boolean_difference(obj, make_cylinder("ScrewR", M3_SCREW_DIA / 2.0, 25.0, (SCREW_POS_X, SCREW_POS_Y, 0.0)))
@@ -316,7 +341,7 @@ def build_db9_hood(cleanup_existing: bool = True) -> tuple[bpy.types.Object, bpy
     apply_boolean_difference(base_obj, make_cylinder("NutL", M3_NUT_RADIUS, M3_NUT_DEPTH, (-SCREW_POS_X, SCREW_POS_Y, -6.5), segments=6))
     apply_boolean_difference(base_obj, make_cylinder("NutR", M3_NUT_RADIUS, M3_NUT_DEPTH, (SCREW_POS_X, SCREW_POS_Y, -6.5), segments=6))
 
-    # 9. Material assignments
+    # 10. Material assignments
     mat = bpy.data.materials.get("Mat_DB9_Case")
     if not mat:
         mat = bpy.data.materials.new("Mat_DB9_Case")
@@ -329,10 +354,10 @@ def build_db9_hood(cleanup_existing: bool = True) -> tuple[bpy.types.Object, bpy
     base_obj.data.materials.append(mat)
     tapa_obj.data.materials.append(mat)
 
-    # 10. Position flat on the build plate (Z = 0) ready for 3D printing
-    base_obj.location = Vector((-22.0, 0.0, 8.0))
+    # 11. Position flat on the build plate (Z = 0) ready for 3D printing
+    base_obj.location = Vector((-22.0, 0.0, 6.0))
     tapa_obj.rotation_euler = (0.0, math.pi, 0.0)
-    tapa_obj.location = Vector((22.0, 0.0, 8.0))
+    tapa_obj.location = Vector((22.0, 0.0, 6.0))
 
     print(f"Generated: {base_obj.name} ({len(base_obj.data.vertices)} vertices)")
     print(f"Generated: {tapa_obj.name} ({len(tapa_obj.data.vertices)} vertices)")
