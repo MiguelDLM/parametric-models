@@ -47,10 +47,11 @@ HOLE_DISTANCE_X = 12.5          # Center-to-hole distance (pitch = 25.0 mm)
 INSERT_PILOT_DIA = 3.85         # Hole diameter for thermal insertion
 INSERT_DEPTH = 5.5              # Blind hole depth
 
-# Central D-Sub 9 pass-through trapezoid cutout (+0.2 mm clearance)
-TRAP_WIDTH_TOP = 16.2
-TRAP_WIDTH_BOTTOM = 14.2
-TRAP_HEIGHT = 8.5
+# Central D-Sub 9 pass-through trapezoid cutout
+# Internal connector body dimensions (solder side)
+TRAP_WIDTH_TOP = 19.1
+TRAP_WIDTH_BOTTOM = 17.2
+TRAP_HEIGHT = 10.4
 TRAP_CORNER_RADIUS = 2.0
 TRAP_CORNER_SEGMENTS = 8
 
